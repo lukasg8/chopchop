@@ -14,17 +14,17 @@ import os
 
 # getting frames from video
 # can choose step (how many seconds between frames)
-def getFrames(inputFile,outputFolder,step,index):
+def getFrames(inputFile,step):
     step = step
     currentFrame = 0
     framesCaptured = 1
     
-    outputFolder = outputFolder + str(index)
-    print(outputFolder)
+    outputFolder = os.path.splitext(inputFile)[0] + "-data"
 
     try:
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
+            print("Creating directory: ", outputFolder)
     except OSError:
         print("ERROR: Could not create directory!")
         
@@ -259,7 +259,8 @@ def allNums(step, framesCaptured):
     print(df)
     return df
     
-def multipleDfs(dfList, sheet, file_name, spaces):
+def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
+    os.chdir(outputFolder)
     writer = pd.ExcelWriter(file_name,engine = 'xlsxwriter')
     row = 0
     for dataframe in dfList:
@@ -267,22 +268,20 @@ def multipleDfs(dfList, sheet, file_name, spaces):
         row = row + len(dataframe.index) + spaces + 1
     writer.save()
 
-
-
-frames1 = getFrames('/Users/lukasgrunzke/Desktop/LCDTest/Data1.MOV','/Users/lukasgrunzke/Desktop/LCDTest/data',2,1)
+frames1 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-1.mov',5)
 
 step = frames1[0]
 framesCaptured = frames1[1]
 df1 = allNums(step,framesCaptured)
 
-frames2 = getFrames('/Users/lukasgrunzke/Desktop/LCDTest/Data2.MOV','/Users/lukasgrunzke/Desktop/LCDTest/data',2,2)
+frames2 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-2.mov',5)
 
 step = frames2[0]
 framesCaptured = frames2[1]
 df2 = allNums(step,framesCaptured)
 
-
+outputFolder = '/Users/lukasgrunzke/Desktop/MCBData'
 dfList = [df1,df2]
-multipleDfs(dfList,'Testing','test1.xlsx',5)
+multipleDfs(dfList,outputFolder,'Testing','test1.xlsx',5)
 
 
