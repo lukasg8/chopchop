@@ -14,8 +14,7 @@ import os
 
 # getting frames from video
 # can choose step (how many seconds between frames)
-def getFrames(inputFile,step):
-    step = step
+def getFrames(inputFile):
     currentFrame = 0
     framesCaptured = 1
     
@@ -30,6 +29,19 @@ def getFrames(inputFile,step):
         
     cam = cv2.VideoCapture(inputFile)
     fps = cam.get(cv2.CAP_PROP_FPS)
+    frameCount = int(cam.get(cv2.CAP_PROP_FRAME_COUNT))
+    totalTime = frameCount/fps
+
+    if totalTime < 20:
+        step = 1
+    elif totalTime < 40:
+        step = 2
+    elif totalTime < 80:
+        step = 4
+    elif totalTime < 120:
+        step = 6
+    else:
+        step = 10
 
     os.chdir(outputFolder)  
 
@@ -51,6 +63,9 @@ def getFrames(inputFile,step):
 
     # used for iterations for getNum
     return (step, framesCaptured - 1)
+
+
+
 
 def getNum(frameNumber):
 
@@ -158,7 +173,6 @@ def getNum(frameNumber):
     cnts = cv2.findContours(thresh,cv2.RETR_EXTERNAL,
                        cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
-    print("length of cnts: ", len(cnts))
 
     # stores the contours of the DIGITS
     digitCnts = []
@@ -224,7 +238,7 @@ def getNum(frameNumber):
             segROI = roi[yA:yB, xA:xB]
             total = cv2.countNonZero(segROI)
             area = (xB - xA) * (yB - yA)
-            print("ONE: percentage covered for area ",i,": ",total/float(area))
+            # print("ONE: percentage covered for area ",i,": ",total/float(area))
             if total / float(area) > 0.45:
                 one_on[i]= 1
         
@@ -236,7 +250,7 @@ def getNum(frameNumber):
                 segROI = roi[yA:yB, xA:xB]
                 total = cv2.countNonZero(segROI)
                 area = (xB - xA) * (yB - yA)
-                print("percentage covered for area ",i,": ",total/float(area))
+                # print("percentage covered for area ",i,": ",total/float(area))
                 if total / float(area) > 0.45:
                     on[i]= 1
             try:
@@ -245,7 +259,7 @@ def getNum(frameNumber):
             except KeyError:
                 print("ERROR: Could not find digit in dictionary!")
                 continue
-        print(on)
+        # print(on)
 
         # output number on screen
         cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
@@ -257,8 +271,11 @@ def getNum(frameNumber):
     num = 0
     for x in range(len(digits)):
         num = num * 10 + digits[x]
-    print(num)
+    # print(num)
     return num
+
+
+
 
 def allNums(step, framesCaptured):
     temps = []
@@ -271,6 +288,9 @@ def allNums(step, framesCaptured):
     print(df)
     return df
     
+
+
+
 def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
     os.chdir(outputFolder)
     writer = pd.ExcelWriter(file_name,engine = 'xlsxwriter')
@@ -280,28 +300,45 @@ def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
         row = row + len(dataframe.index) + spaces + 1
     writer.save()
 
-# testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid5.mov',2)
-# step = testframe[0]
-# framesCaptured = testframe[1]
-# testdf = allNums(step,framesCaptured)
+
+
 
 def folderToData(path):
     listOfFiles = os.listdir(path)
     listOfFiles = listOfFiles[1:]
     print(listOfFiles)
 
-    
+    dfs = []
+
+    for file in listOfFiles:
+        frameInfo = getFrames(file)
+        df = allNums(frameInfo[0],frameInfo[1])
+        print('Dataframe: ')
+        print(df)
+        print('\n')
+        dfs.append(df)
 
 
-folderToData('/Users/lukasgrunzke/Desktop/MCBData')
 
-# frames1 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-40A-1.mov',2)
+
+
+
+
+
+# folderToData('/Users/lukasgrunzke/Desktop/MCBData')
+
+testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid5.mov')
+step = testframe[0]
+framesCaptured = testframe[1]
+testdf = allNums(step,framesCaptured)
+
+# frames1 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-40A-1.mov')
 
 # step = frames1[0]
 # framesCaptured = frames1[1]
 # df1 = allNums(step,framesCaptured)
 
-# frames2 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-2.mov',10)
+# frames2 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-2.mov')
 
 # step = frames2[0]
 # framesCaptured = frames2[1]
