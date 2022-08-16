@@ -75,22 +75,65 @@ def getNum(frameNumber):
 
     # process image
     image = imutils.resize(image,height=500)
-    # new_image = image
+    new_image = image
 
-    # alpha = 1.5
+    # CONTRAST
+    # alpha = 1.2
     # for y in range(image.shape[0]):
     #     for x in range(image.shape[1]):
     #         for c in range(image.shape[2]):
     #             new_image[y,x,c] = np.clip(alpha*image[y,x,c] + 0, 0, 255)
 
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5,5), 0)
-    edged = cv2.Canny(blurred,50,200,255)
-    # kernel = np.ones((5,5),np.uint8)
-    # edged = cv2.dilate(edged,kernel,iterations=1)
+    # REMOVE SHADOW
+    # source: https://stackoverflow.com/questions/44752240/how-to-remove-shadow-from-scanned-images-using-opencv
+    # rgb_planes = cv2.split(image)
 
-    # cv2.imshow("edged",edged)
-    # cv2.waitKey(0)
+    # result_planes = []
+    # result_norm_planes = []
+    # for plane in rgb_planes:
+    #     dilated_img = cv2.dilate(plane, np.ones((7,7), np.uint8))
+    #     bg_img = cv2.medianBlur(dilated_img, 21)
+    #     diff_img = 255 - cv2.absdiff(plane, bg_img)
+    #     norm_img = cv2.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+    #     result_planes.append(diff_img)
+    #     result_norm_planes.append(norm_img)
+
+    # result = cv2.merge(result_planes)
+    # image = cv2.merge(result_norm_planes)
+
+    # TWEAKING ORIGINAL
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # blurred = cv2.GaussianBlur(gray, (5,5), 0)
+    # edged = cv2.Canny(blurred,1,200,255)
+    # # kernel = np.ones((0,0),np.uint8)
+    # # edged = cv2.dilate(edged,kernel,iterations=1)
+
+    # ORIGINAL
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    # edged = cv2.Canny(blurred, 5, 200, 255)
+
+
+
+
+
+
+
+
+    # ADAPTIVE THRESHOLDING
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (7,7), 0)
+    # edged = cv2.adaptiveThreshold(blurred, 255,
+	#     cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
+    edged = cv2.adaptiveThreshold(blurred, 255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 2)
+    cv2.imshow("edged",edged)
+    cv2.waitKey(0)
+
+
+
+
+
 
     # find contours (locates continous points with same color/intensity)
     cnts = cv2.findContours(edged.copy(),cv2.RETR_EXTERNAL,
@@ -104,7 +147,9 @@ def getNum(frameNumber):
     # displayCnt = []
     displayCnt = None
 
-    # finding rectangle (approx shape and find one with 4  vertices)
+
+
+
     # for c in cnts:
     #     peri = cv2.arcLength(c,True)
     #     approx = cv2.approxPolyDP(c,0.10*peri,True)
@@ -116,6 +161,10 @@ def getNum(frameNumber):
             
     # print('length of displayCnt: ', len(displayCnt))
 
+
+
+
+    # finding rectangle (approx shape and find one with 4  vertices)
     for c in cnts:
         peri = cv2.arcLength(c,True)
         approx = cv2.approxPolyDP(c,0.05*peri,True)
@@ -125,7 +174,48 @@ def getNum(frameNumber):
 
     # if you give it four points, it will output rectangle as if you are looking at it straigth on
     warped = four_point_transform(gray, displayCnt.reshape(4,2))
+
+
+
+
+
+
+
+
+    # remove shadow
+    rgb_planes = cv2.split(warped)
+
+    result_planes = []
+    result_norm_planes = []
+    for plane in rgb_planes:
+        dilated_img = cv2.dilate(plane, np.ones((7,7), np.uint8))
+        bg_img = cv2.medianBlur(dilated_img, 21)
+        diff_img = 255 - cv2.absdiff(plane, bg_img)
+        norm_img = cv2.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+        result_planes.append(diff_img)
+        result_norm_planes.append(norm_img)
+
+    result = cv2.merge(result_planes)
+    warped = cv2.merge(result_norm_planes)
+
+    cv2.imshow("shadow",warped)
+    cv2.waitKey(0)
+
+
+
+
+
+
+
+    # FOR DISPLAY (To see if you really did capture display)
     output = four_point_transform(image, displayCnt.reshape(4,2))
+
+
+
+
+
+
+
 
     # INCOMPLETE (not sure if needed since we may just ignore if cannot be found in dict)
     # since there were problems with contours being found on the edges of the LCD 
@@ -134,32 +224,81 @@ def getNum(frameNumber):
     height = dimension[0]
     width = dimension[1]
 
-    # output = output[height - (height/10), width - (width/10)]
-
-    # cv2.imshow("output",output)
-    # cv2.waitKey(0)
-
     # define kernel for erosion
     # erosion actually reduces the size of the white but since we use 
     # BINARY_THRESH_INV (inversed) it does the same effect as cv2.dilate
-    kernel = np.ones((5,5),np.uint8)
-    erosion = cv2.erode(warped,kernel,iterations=1)
-    thresh = cv2.threshold(erosion,0,225,
-                      cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # get rid of degrees celsius sign (noise)
+    kernel = np.ones((3,3),np.uint8)
+    erosion = cv2.dilate(warped,kernel,iterations=1)
+
+    kernel = np.ones((7,7),np.uint8)
+    dilation = cv2.erode(erosion,kernel,iterations=1)
+
+    kernel = np.ones((3,3),np.uint8)
+    dilation = cv2.erode(dilation,kernel,iterations=1)
+
+    thresh = cv2.threshold(dilation,0,225,
+                     cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+
+    cv2.imshow("before cleanup",thresh)
+    cv2.waitKey(0)
 
     # cleanup
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10))
+    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
     thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
 
-    # cv2.imshow("thresh",thresh)
-    # cv2.waitKey(0)
+    cv2.imshow("thresh",thresh)
+    cv2.waitKey(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # CHAIN_APPROX_SIMPLE only stores the necessary points for the contours
     # i.e. if there is a rectangle, it will only store vertices instead of 
     # every dot on the line
-    cnts = cv2.findContours(thresh.copy(),cv2.RETR_EXTERNAL,
+    cnts = cv2.findContours(thresh,cv2.RETR_EXTERNAL,
                        cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
+    print("length of cnts: ", len(cnts))
 
     # stores the contours of the DIGITS
     digitCnts = []
@@ -181,6 +320,9 @@ def getNum(frameNumber):
             cv2.imshow("output boxes",output)
             cv2.waitKey(0)
 
+
+
+    print("max width: ",max)
     print("boxes found: ",len(digitCnts))
 
     # sort the contours from left to right (the same way we read numbers)
@@ -201,18 +343,18 @@ def getNum(frameNumber):
         roi = thresh[y:y+h,x:x+w]
         
         (roiH,roiW) = roi.shape
-        (dH,dW) = (int(roiH*0.20),int(roiW*0.30))
-        dHC = int(roiH * 0.05)
+        (dH,dW) = (int(roiH*0.15),int(roiW*0.3))
+        dHC = int(roiH * 0.1)
 
         # splits the roi into 7 areas where the LCD can be on or not
         segments = [
-            ((0, 0), (w, dH)), # top
-            ((0, 0), (dW, h // 2)), # top-left
+            ((0, 0), (w, int(dH*0.8))), # top
+            ((0, 0), (int(dW*1.2), h // 2)), # top-left
             ((w - dW, 0), (w, h // 2)), # top-right
             ((0, (h // 2) - dHC) , (w, (h // 2) + dHC)), # center
             ((0, h // 2), (dW, h)), # bottom-left
             ((w - dW, h // 2), (w, h)), # bottom-right
-            ((0, h - dH), (w, h)) # bottom
+            ((0, h - dH), (w-dH, h)) # bottom
         ]
         on = [0] * len(segments)
 
@@ -221,11 +363,15 @@ def getNum(frameNumber):
         # LCD region is on
         for (i, ((xA, yA), (xB, yB))) in enumerate(segments):
             segROI = roi[yA:yB, xA:xB]
+            # cv2.imshow("segment",cv2.line(roi,(xA, yA), (xB, yB),(0,255,0),thickness=2))
+            # cv2.waitKey(0)
             total = cv2.countNonZero(segROI)
             area = (xB - xA) * (yB - yA)
-            if total / float(area) > 0.5:
+            print("percentage covered for area ",i,": ",total/float(area))
+            if total / float(area) > 0.45:
                 on[i]= 1
 
+        print(on)
         # reference dictionary to identify number
         try:
             digit = DIGITS_LOOKUP[tuple(on)]
@@ -239,8 +385,8 @@ def getNum(frameNumber):
         cv2.putText(output, str(digit), (x - 10, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
 
-        # cv2.imshow("output again",output)
-        # cv2.waitKey(0)
+        cv2.imshow("output again",output)
+        cv2.waitKey(0)
 
     num = 0
     for x in range(len(digits)):
@@ -268,20 +414,26 @@ def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
         row = row + len(dataframe.index) + spaces + 1
     writer.save()
 
-frames1 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-1.mov',5)
+# testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid2.mov',2)
+# step = testframe[0]
+# framesCaptured = testframe[1]
+# testdf = allNums(step,framesCaptured)
+
+
+frames1 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-40A-1.mov',2)
 
 step = frames1[0]
 framesCaptured = frames1[1]
 df1 = allNums(step,framesCaptured)
 
-frames2 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-2.mov',5)
+# frames2 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-2.mov',10)
 
-step = frames2[0]
-framesCaptured = frames2[1]
-df2 = allNums(step,framesCaptured)
+# step = frames2[0]
+# framesCaptured = frames2[1]
+# df2 = allNums(step,framesCaptured)
 
-outputFolder = '/Users/lukasgrunzke/Desktop/MCBData'
-dfList = [df1,df2]
-multipleDfs(dfList,outputFolder,'Testing','test1.xlsx',5)
+# outputFolder = '/Users/lukasgrunzke/Desktop/MCBData'
+# dfList = [df1,df2]
+# multipleDfs(dfList,outputFolder,'Testing','test1.xlsx',5)
 
 
