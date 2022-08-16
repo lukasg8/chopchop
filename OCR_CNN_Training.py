@@ -29,19 +29,17 @@ def getFrames(inputFile):
         
     cam = cv2.VideoCapture(inputFile)
     fps = cam.get(cv2.CAP_PROP_FPS)
-    frameCount = int(cam.get(cv2.CAP_PROP_FRAME_COUNT))
-    totalTime = frameCount/fps
 
-    if totalTime < 20:
+    if "50A" in inputFile:
         step = 1
-    elif totalTime < 40:
+    elif "40A" in inputFile:
         step = 2
-    elif totalTime < 80:
+    elif "30A" in inputFile:
         step = 4
-    elif totalTime < 120:
+    elif "20A" in inputFile:
         step = 6
     else:
-        step = 10
+        step = 5
 
     os.chdir(outputFolder)  
 
@@ -325,12 +323,12 @@ def folderToData(path):
 
 
 
-# folderToData('/Users/lukasgrunzke/Desktop/MCBData')
+folderToData('/Users/lukasgrunzke/Desktop/MCBData')
 
-testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid5.mov')
-step = testframe[0]
-framesCaptured = testframe[1]
-testdf = allNums(step,framesCaptured)
+# testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid5.mov')
+# step = testframe[0]
+# framesCaptured = testframe[1]
+# testdf = allNums(step,framesCaptured)
 
 # frames1 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-40A-1.mov')
 
