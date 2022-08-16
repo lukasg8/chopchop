@@ -97,8 +97,8 @@ def getNum(frameNumber):
     edged = cv2.adaptiveThreshold(blurred, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 2)
 
-    cv2.imshow("edged",edged)
-    cv2.waitKey(0)
+    # cv2.imshow("edged",edged)
+    # cv2.waitKey(0)
 
     # find contours (locates continous points with same color/intensity)
     cnts = cv2.findContours(edged.copy(),cv2.RETR_EXTERNAL,
@@ -141,8 +141,8 @@ def getNum(frameNumber):
     result = cv2.merge(result_planes)
     warped = cv2.merge(result_norm_planes)
 
-    cv2.imshow("shadow",warped)
-    cv2.waitKey(0)
+    # cv2.imshow("shadow",warped)
+    # cv2.waitKey(0)
 
     # define kernel for erosion
     # erosion actually reduces the size of the white but since we use 
@@ -162,8 +162,8 @@ def getNum(frameNumber):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
     thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
 
-    cv2.imshow("thresh",thresh)
-    cv2.waitKey(0)
+    # cv2.imshow("thresh",thresh)
+    # cv2.waitKey(0)
 
     # CHAIN_APPROX_SIMPLE only stores the necessary points for the contours
     # i.e. if there is a rectangle, it will only store vertices instead of 
@@ -186,7 +186,7 @@ def getNum(frameNumber):
         # camera angle and distance from LCD
         # POSSIBLE IMPROVEMENT: write algorithm to automatically find
         # the correct w and h
-        if w >= 15 and (h >= 50 and h <= 200):
+        if w >= 18 and (h >= 50 and h <= 200):
             digitCnts.append(c)
             # cv2.rectangle(output,(x,y),(x+w,y+h),(255,0,0),3)
             # cv2.imshow("output boxes",output)
@@ -316,12 +316,14 @@ def folderToData(path):
         print('\n')
         dfs.append(df)
 
+# ISSUE 1
 # add some data checking
 # i.e. if num outputted is over 1000, only take the last three digits
 # when you input it into the excel file, make sure the cell with the modified 
 # data is flagged (maybe highlight orange)
 
-
+# ISSUE 2
+# don't want to have it write a folder for an existing folder!
 
 
 
