@@ -131,8 +131,8 @@ def getNum(frameNumber):
 	#     cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
     edged = cv2.adaptiveThreshold(blurred, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 2)
-    cv2.imshow("edged",edged)
-    cv2.waitKey(0)
+    # cv2.imshow("edged",edged)
+    # cv2.waitKey(0)
 
 
 
@@ -202,8 +202,8 @@ def getNum(frameNumber):
     result = cv2.merge(result_planes)
     warped = cv2.merge(result_norm_planes)
 
-    cv2.imshow("shadow",warped)
-    cv2.waitKey(0)
+    # cv2.imshow("shadow",warped)
+    # cv2.waitKey(0)
 
 
 
@@ -261,16 +261,13 @@ def getNum(frameNumber):
     thresh = cv2.threshold(dilation,0,225,
                      cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 
-    cv2.imshow("before cleanup",thresh)
-    cv2.waitKey(0)
-
     # cleanup
     # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10))
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
     thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
 
-    cv2.imshow("thresh",thresh)
-    cv2.waitKey(0)
+    # cv2.imshow("thresh",thresh)
+    # cv2.waitKey(0)
 
 
 
@@ -318,10 +315,10 @@ def getNum(frameNumber):
         # camera angle and distance from LCD
         # POSSIBLE IMPROVEMENT: write algorithm to automatically find
         # the correct w and h
-        if w >= 5 and (h >= 50 and h <= 200):
+        if w >= 10 and (h >= 50 and h <= 200):
             digitCnts.append(c)
-            cv2.rectangle(output,(x,y),(x+w,y+h),(255,0,0),3)
-            cv2.imshow("output boxes",output)
+            # cv2.rectangle(output,(x,y),(x+w,y+h),(255,0,0),3)
+            # cv2.imshow("output boxes",output)
             cv2.waitKey(0)
 
 
@@ -355,7 +352,7 @@ def getNum(frameNumber):
             ((0, 0), (w, int(dH*0.8))), # top
             ((0, 0), (int(dW*1.2), h // 2)), # top-left
             ((w - dW, 0), (w, h // 2)), # top-right
-            ((0, (h // 2) - dHC) , (w, (h // 2) + dHC)), # center
+            ((dW, (h // 2) - dHC) , (w-dW, (h // 2) + dHC)), # center
             ((0, h // 2), (dW, h)), # bottom-left
             ((w - dW, h // 2), (w, h)), # bottom-right
             ((0, h - dH), (w-dH, h)) # bottom
@@ -363,43 +360,61 @@ def getNum(frameNumber):
         on = [0] * len(segments)
 
         one_segments = [
-            ((int(w*0.4),int(h*0.1)), (w,int(h*0.5))),
-            ((0,int(h*0.5)),(w*0.6,h))
+            ((int(w*0.4),int(h*0.1)), (int(w*0.7),int(h*0.5))),
+            ((0,int(h*0.5)),(int(w*0.6),h))
         ]
         one_on = [0] * len(one_segments)
 
         # identifies if specific region of LCD is on or not by counting 
         # the nonzero pixels. If they account for more than 50% of region,
         # LCD region is on
-        for (i, ((xA, yA), (xB, yB))) in enumerate(segments):
+        for (i, ((xA, yA), (xB, yB))) in enumerate(one_segments):
             segROI = roi[yA:yB, xA:xB]
-            # cv2.imshow("segment",cv2.line(roi,(xA, yA), (xB, yB),(0,255,0),thickness=2))
-            # cv2.waitKey(0)
             total = cv2.countNonZero(segROI)
             area = (xB - xA) * (yB - yA)
-            print("percentage covered for area ",i,": ",total/float(area))
+            print("ONE: percentage covered for area ",i,": ",total/float(area))
             if total / float(area) > 0.45:
-                on[i]= 1
+                one_on[i]= 1
+        
+        try:
+            digit = ONE_LOOKUP[tuple(one_on)]
+            digits.append(digit)
+        except KeyError:
+            for (i, ((xA, yA), (xB, yB))) in enumerate(segments):
+                segROI = roi[yA:yB, xA:xB]
+                # cv2.imshow("segment",cv2.line(roi,(xA, yA), (xB, yB),(0,255,0),thickness=2))
+                # cv2.waitKey(0)
+                total = cv2.countNonZero(segROI)
+                area = (xB - xA) * (yB - yA)
+                print("percentage covered for area ",i,": ",total/float(area))
+                if total / float(area) > 0.45:
+                    on[i]= 1
+            try:
+                digit = DIGITS_LOOKUP[tuple(on)]
+                digits.append(digit)
+            except KeyError:
+                print("ERROR: Could not find digit in dictionary!")
+                continue
 
         print(on)
         # reference dictionary to identify number
-        try:
-            digit = DIGITS_LOOKUP[tuple(on)]
-            digits.append(digit)
-        except KeyError:
-            for (i, ((xA, yA), (xB, yB))) in enumerate(one_segments):
-                segROI = roi[yA:yB, xA:xB]
-                total = cv2.countNonZero(segROI)
-                area = (xB - xA) * (yB - yA)
-                print("ONE: percentage covered for area ",i,": ",total/float(area))
-                if total / float(area) > 0.45:
-                    one_on[i]= 1
-            try:
-                digit = ONE_LOOKUP(tuple(one_on))
-                digits.append(digit)
-            except KeyError:
-                    print("ERROR: Could not find digit in dictionary!")
-                    continue
+        # try:
+        #     digit = DIGITS_LOOKUP[tuple(on)]
+        #     digits.append(digit)
+        # except KeyError:
+        #     for (i, ((xA, yA), (xB, yB))) in enumerate(one_segments):
+        #         segROI = roi[yA:yB, xA:xB]
+        #         total = cv2.countNonZero(segROI)
+        #         area = (xB - xA) * (yB - yA)
+        #         print("ONE: percentage covered for area ",i,": ",total/float(area))
+        #         if total / float(area) > 0.45:
+        #             one_on[i]= 1
+        #     try:
+        #         digit = ONE_LOOKUP[tuple(one_on)]
+        #         digits.append(digit)
+        #     except KeyError:
+        #             print("ERROR: Could not find digit in dictionary!")
+        #             continue
 
         # output number on screen
         cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
