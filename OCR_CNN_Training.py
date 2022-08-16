@@ -73,6 +73,10 @@ def getNum(frameNumber):
         (1, 1, 1, 1, 0, 1, 1): 9  
     }
 
+    ONE_LOOKUP = {
+        (1,1): 1
+    }
+
     # process image
     image = imutils.resize(image,height=500)
     new_image = image
@@ -358,6 +362,12 @@ def getNum(frameNumber):
         ]
         on = [0] * len(segments)
 
+        one_segments = [
+            ((int(w*0.4),int(h*0.1)), (w,int(h*0.5))),
+            ((0,int(h*0.5)),(w*0.6,h))
+        ]
+        one_on = [0] * len(one_segments)
+
         # identifies if specific region of LCD is on or not by counting 
         # the nonzero pixels. If they account for more than 50% of region,
         # LCD region is on
@@ -377,8 +387,19 @@ def getNum(frameNumber):
             digit = DIGITS_LOOKUP[tuple(on)]
             digits.append(digit)
         except KeyError:
-            print("ERROR: Could not find digit in dictionary!")
-            continue
+            for (i, ((xA, yA), (xB, yB))) in enumerate(one_segments):
+                segROI = roi[yA:yB, xA:xB]
+                total = cv2.countNonZero(segROI)
+                area = (xB - xA) * (yB - yA)
+                print("ONE: percentage covered for area ",i,": ",total/float(area))
+                if total / float(area) > 0.45:
+                    one_on[i]= 1
+            try:
+                digit = ONE_LOOKUP(tuple(one_on))
+                digits.append(digit)
+            except KeyError:
+                    print("ERROR: Could not find digit in dictionary!")
+                    continue
 
         # output number on screen
         cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
