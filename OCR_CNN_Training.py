@@ -316,7 +316,10 @@ def folderToData(path):
         print('\n')
         dfs.append(df)
 
-
+# add some data checking
+# i.e. if num outputted is over 1000, only take the last three digits
+# when you input it into the excel file, make sure the cell with the modified 
+# data is flagged (maybe highlight orange)
 
 
 
