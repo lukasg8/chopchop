@@ -6,10 +6,6 @@ import numpy as np
 import pandas as pd
 import os
 
-# test
-# test 2
-# test 3
-
 # sources:
 # OCR:
 # https://pyimagesearch.com/2017/02/13/recognizing-digits-with-opencv-and-python/
