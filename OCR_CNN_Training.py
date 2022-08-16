@@ -283,7 +283,6 @@ def allNums(step, framesCaptured):
         times.append(x*step)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
-    print(df)
     return df
     
 
@@ -309,6 +308,7 @@ def folderToData(path):
     dfs = []
 
     for file in listOfFiles:
+        os.chdir(path)
         frameInfo = getFrames(file)
         df = allNums(frameInfo[0],frameInfo[1])
         print('Dataframe: ')
