@@ -296,7 +296,8 @@ def allNums(step, framesCaptured):
                        'temps':temps})
     path = os.getcwd()
     dir = os.path.basename(path)
-    
+    dir = dir[:-5]
+
     # output df and title (for excel sheet)
     return df, dir
     
@@ -319,8 +320,7 @@ def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
     writer.save()
 
 
-#def folderToData(path, sheet, fileName, spaces):
-def folderToData(path):
+def folderToData(path, sheet, fileName, spaces):
     os.chdir(path)
     listOfFiles = os.listdir(path)
 
@@ -336,20 +336,25 @@ def folderToData(path):
         listOfFiles.remove(file)
 
     dfs = []
-    # wb = xw.Book(fileName)
-    # sht = wb.sheets[0]
-    # sht.name = sheet
+    writer = pd.ExcelWriter(fileName,engine = 'xlsxwriter')
 
-    for file in listOfFiles:
+    wb = xw.Book(fileName)
+    sht = wb.sheets[0]
+    sht.name = sheet
+
+    for x, file in enumerate(listOfFiles):
         os.chdir(path)
         frameInfo = getFrames(file)
-        df = allNums(frameInfo[0],frameInfo[1])
+        df,dir = allNums(frameInfo[0],frameInfo[1])
+        insertHeading(sht.range("B"+str(x*spaces)))
+
+        print(dir)
+        print(df)
         dfs.append(df)
 
 
 
         # insertHeading(sht.range())
-        print(df)
     
 
 
@@ -365,7 +370,11 @@ def folderToData(path):
 
 
 
-folderToData('/Users/lukasgrunzke/Desktop/NEW VID')
+folderToData('/Users/lukasgrunzke/Desktop/NEW VID','Sheet1','TestingData',4)
+
+
+
+
 
 # testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid5.mov')
 # step = testframe[0]
