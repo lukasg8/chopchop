@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
-import shutil
+import xlwings as xw
 
 # sources:
 # OCR:
@@ -294,21 +294,32 @@ def allNums(step, framesCaptured):
         times.append((x*step)+5)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
-    return df
+    path = os.getcwd()
+    dir = os.path.basename(path)
+    
+    # output df and title (for excel sheet)
+    return df, dir
     
 
-
+def insertHeading(rng,heading):
+    rng.value = heading
+    rng.font.bold = True
+    rng.font.size = 20
+    rng.font.color = (0,255,0)
 
 def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
     os.chdir(outputFolder)
     writer = pd.ExcelWriter(file_name,engine = 'xlsxwriter')
-    row = 0
+    sheet = writer.sheet(sheet)
+    col = 0
     for dataframe in dfList:
-        dataframe.to_excel(writer,sheet_name=sheet,startrow=row,startcol=0)
-        row = row + len(dataframe.index) + spaces + 1
+        dataframe.to_excel(writer,sheet_name=sheet,startrow=3,startcol=col)
+        sheet.write(col,1,)
+        col = col + 5
     writer.save()
 
 
+#def folderToData(path, sheet, fileName, spaces):
 def folderToData(path):
     os.chdir(path)
     listOfFiles = os.listdir(path)
@@ -325,15 +336,22 @@ def folderToData(path):
         listOfFiles.remove(file)
 
     dfs = []
+    # wb = xw.Book(fileName)
+    # sht = wb.sheets[0]
+    # sht.name = sheet
+
     for file in listOfFiles:
         os.chdir(path)
         frameInfo = getFrames(file)
         df = allNums(frameInfo[0],frameInfo[1])
-        print(df)
         dfs.append(df)
 
+
+
+        # insertHeading(sht.range())
+        print(df)
     
-    
+
 
 # ISSUE 1
 # add some data checking
