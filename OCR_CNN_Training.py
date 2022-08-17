@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
+import shutil
 
 # sources:
 # OCR:
@@ -308,10 +309,13 @@ def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
 
 
 
-
 def folderToData(path):
+    os.chdir(path)
     listOfFiles = os.listdir(path)
-    listOfFiles = listOfFiles[1:]
+    for file in listOfFiles:
+        if 'DS_Store' in file:
+            listOfFiles.remove(file)
+
     print(listOfFiles)
 
     dfs = []
@@ -320,9 +324,7 @@ def folderToData(path):
         os.chdir(path)
         frameInfo = getFrames(file)
         df = allNums(frameInfo[0],frameInfo[1])
-        print('Dataframe: ')
         print(df)
-        print('\n')
         dfs.append(df)
 
 # ISSUE 1
