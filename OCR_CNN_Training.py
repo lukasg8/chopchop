@@ -33,9 +33,9 @@ def getFrames(inputFile):
     if "50A" in inputFile:
         step = 1
     elif "40A" in inputFile:
-        step = 2
+        step = 1
     elif "30A" in inputFile:
-        step = 4
+        step = 2
     elif "20A" in inputFile:
         step = 6
     else:
@@ -46,6 +46,13 @@ def getFrames(inputFile):
     while(True):
         ret,frame = cam.read()
         if ret:
+            if framesCaptured <= 5 and currentFrame > fps:
+                name = 'frame'+str(framesCaptured)+'.jpg'
+                print('Creating: ' + name)
+                cv2.imwrite(os.path.join(outputFolder,name),frame)
+                if not(cv2.imwrite(name,frame)):
+                    print('ERROR: Could not write image file')
+                framesCaptured += 1
             if currentFrame > (step*fps):
                 currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
@@ -269,7 +276,6 @@ def getNum(frameNumber):
     num = 0
     for x in range(len(digits)):
         num = num * 10 + digits[x]
-    # print(num)
     return num
 
 
@@ -278,9 +284,12 @@ def getNum(frameNumber):
 def allNums(step, framesCaptured):
     temps = []
     times = []
-    for x in range(framesCaptured):
+    for x in range(5):
         temps.append(getNum(x+1))
-        times.append(x*step)
+        times.append(x)
+    for x in range(framesCaptured-5):
+        temps.append(getNum(x+6))
+        times.append((x*step)-4)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
     return df
@@ -328,7 +337,7 @@ def folderToData(path):
 
 
 
-folderToData('/Users/lukasgrunzke/Desktop/MCBData')
+folderToData('/Users/lukasgrunzke/Desktop/NEW VID')
 
 # testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid5.mov')
 # step = testframe[0]
