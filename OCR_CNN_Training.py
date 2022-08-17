@@ -48,13 +48,14 @@ def getFrames(inputFile):
         ret,frame = cam.read()
         if ret:
             if framesCaptured <= 5 and currentFrame > fps:
+                currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
                 print('Creating: ' + name)
                 cv2.imwrite(os.path.join(outputFolder,name),frame)
                 if not(cv2.imwrite(name,frame)):
                     print('ERROR: Could not write image file')
                 framesCaptured += 1
-            if currentFrame > (step*fps):
+            elif currentFrame > (step*fps):
                 currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
                 print('Creating: ' + name)
@@ -290,7 +291,7 @@ def allNums(step, framesCaptured):
         times.append(x)
     for x in range(framesCaptured-5):
         temps.append(getNum(x+6))
-        times.append((x*step)+4)
+        times.append((x*step)+5)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
     return df
@@ -306,7 +307,6 @@ def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
         dataframe.to_excel(writer,sheet_name=sheet,startrow=row,startcol=0)
         row = row + len(dataframe.index) + spaces + 1
     writer.save()
-
 
 
 def folderToData(path):
@@ -331,6 +331,9 @@ def folderToData(path):
         df = allNums(frameInfo[0],frameInfo[1])
         print(df)
         dfs.append(df)
+
+    
+    
 
 # ISSUE 1
 # add some data checking
