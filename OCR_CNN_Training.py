@@ -312,10 +312,19 @@ def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
 def folderToData(path):
     os.chdir(path)
     listOfFiles = os.listdir(path)
-    for file in listOfFiles:
-        if 'DS_Store' in file or 'data' in file:
-            listOfFiles.remove(file)
+    print(listOfFiles)
+    
+    remove = []
 
+    for file in listOfFiles:
+        if 'data' in file:
+            remove.append(file)
+            continue
+        if '.DS_Store' in file:
+            remove.append(file)
+
+    for file in remove:
+        listOfFiles.remove(file)
 
     print(listOfFiles)
 
