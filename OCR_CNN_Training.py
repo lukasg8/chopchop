@@ -290,7 +290,7 @@ def allNums(step, framesCaptured):
         times.append(x)
     for x in range(framesCaptured-5):
         temps.append(getNum(x+6))
-        times.append((x*step)-4)
+        times.append((x*step)+4)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
     return df
@@ -313,8 +313,9 @@ def folderToData(path):
     os.chdir(path)
     listOfFiles = os.listdir(path)
     for file in listOfFiles:
-        if 'DS_Store' in file:
+        if 'DS_Store' in file or 'data' in file:
             listOfFiles.remove(file)
+
 
     print(listOfFiles)
 
