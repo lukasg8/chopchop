@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
-import xlwings as xw
+# import xlwings as xw
 
 # sources:
 # OCR:
@@ -301,12 +301,7 @@ def allNums(step, framesCaptured):
     # output df and title (for excel sheet)
     return df, dir
     
-
-def insertHeading(rng,heading):
-    rng.value = heading
-    rng.font.bold = True
-    rng.font.size = 20
-    rng.font.color = (0,255,0)
+    
 
 def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
     os.chdir(outputFolder)
@@ -338,20 +333,36 @@ def folderToData(path, sheet, fileName, spaces):
     dfs = []
     writer = pd.ExcelWriter(fileName,engine = 'xlsxwriter')
 
-    wb = xw.Book(fileName)
-    sht = wb.sheets[0]
-    sht.name = sheet
+    # wb = Workbook()
+    
+    # # add_sheet is used to create sheet.
+    # sheet1 = wb.add_sheet('Sheet 1')
+    
+    # sheet1.write(1, 0, 'ISBT DEHRADUN')
+    # wb = xw.Book(fileName)
+    # sht = wb.sheets[0]
+    # sht.name = sheet
 
     for x, file in enumerate(listOfFiles):
         os.chdir(path)
         frameInfo = getFrames(file)
         df,dir = allNums(frameInfo[0],frameInfo[1])
-        insertHeading(sht.range("B"+str(x*spaces)))
+        df.to_excel(writer,startrow=3,startcol=x*spaces)
+
+        worksheet = writer.sheets['Sheet1']
+        worksheet.write_string(0, 0, 'Your text here')
+
+
+
+
+        # insertHeading(sht.range("B"+str(x*spaces)))
+        # sheet.write((x+1)*spaces,1,dir)
+
 
         print(dir)
         print(df)
         dfs.append(df)
-
+    writer.save()
 
 
         # insertHeading(sht.range())
