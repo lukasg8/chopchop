@@ -312,10 +312,8 @@ def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
 def folderToData(path):
     os.chdir(path)
     listOfFiles = os.listdir(path)
-    print(listOfFiles)
-    
-    remove = []
 
+    remove = []
     for file in listOfFiles:
         if 'data' in file:
             remove.append(file)
@@ -326,10 +324,7 @@ def folderToData(path):
     for file in remove:
         listOfFiles.remove(file)
 
-    print(listOfFiles)
-
     dfs = []
-
     for file in listOfFiles:
         os.chdir(path)
         frameInfo = getFrames(file)
