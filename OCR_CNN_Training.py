@@ -1,3 +1,4 @@
+from distutils import dir_util
 from imutils.perspective import four_point_transform
 from imutils import contours
 import imutils
@@ -74,7 +75,7 @@ def getFrames(inputFile):
 
 
 
-def getNum(frameNumber):
+def getNum(frameNumber, check):
 
     # get image
     image = cv2.imread("frame"+str(frameNumber)+".jpg")
@@ -272,8 +273,10 @@ def getNum(frameNumber):
         cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
         cv2.putText(output, str(digit), (x - 10, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
-        cv2.imshow("output again",output)
-        cv2.waitKey(0)
+        
+        if check == True:
+            cv2.imshow("output again",output)
+            cv2.waitKey(0)
 
     num = 0
     for x in range(len(digits)):
@@ -287,10 +290,10 @@ def allNums(step, framesCaptured):
     temps = []
     times = []
     for x in range(5):
-        temps.append(getNum(x+1))
+        temps.append(getNum(x+1,False))
         times.append(x)
     for x in range(framesCaptured-5):
-        temps.append(getNum(x+6))
+        temps.append(getNum(x+6,False))
         times.append((x*step)+5)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
@@ -301,7 +304,7 @@ def allNums(step, framesCaptured):
     # output df and title (for excel sheet)
     return df, dir
     
-    
+
 
 def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
     os.chdir(outputFolder)
@@ -324,6 +327,9 @@ def folderToData(path, sheet, fileName, spaces):
         if 'data' in file:
             remove.append(file)
             continue
+        if '.xlsx' in file:
+            remove.append(file)
+            continue
         if '.DS_Store' in file:
             remove.append(file)
 
@@ -333,35 +339,21 @@ def folderToData(path, sheet, fileName, spaces):
     dfs = []
     writer = pd.ExcelWriter(fileName,engine = 'xlsxwriter')
 
-    # wb = Workbook()
-    
-    # # add_sheet is used to create sheet.
-    # sheet1 = wb.add_sheet('Sheet 1')
-    
-    # sheet1.write(1, 0, 'ISBT DEHRADUN')
-    # wb = xw.Book(fileName)
-    # sht = wb.sheets[0]
-    # sht.name = sheet
-
     for x, file in enumerate(listOfFiles):
         os.chdir(path)
         frameInfo = getFrames(file)
         df,dir = allNums(frameInfo[0],frameInfo[1])
-        df.to_excel(writer,startrow=3,startcol=x*spaces)
+        df.to_excel(writer,startrow=2,startcol=x*spaces)
 
         worksheet = writer.sheets['Sheet1']
-        worksheet.write_string(0, 0, 'Your text here')
-
-
-
-
-        # insertHeading(sht.range("B"+str(x*spaces)))
-        # sheet.write((x+1)*spaces,1,dir)
+        worksheet.write_string(1, (x*spaces)+1, dir)
 
 
         print(dir)
         print(df)
         dfs.append(df)
+
+
     writer.save()
 
 
@@ -381,7 +373,7 @@ def folderToData(path, sheet, fileName, spaces):
 
 
 
-folderToData('/Users/lukasgrunzke/Desktop/NEW VID','Sheet1','TestingData',4)
+folderToData('/Users/lukasgrunzke/Desktop/NEW VID','Sheet1','TestingData.xlsx',4)
 
 
 
