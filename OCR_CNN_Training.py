@@ -32,16 +32,19 @@ def getFrames(inputFile):
     cam = cv2.VideoCapture(inputFile)
     fps = cam.get(cv2.CAP_PROP_FPS)
 
-    if "50A" in inputFile:
-        step = 1
-    elif "40A" in inputFile:
-        step = 1
-    elif "30A" in inputFile:
-        step = 2
-    elif "20A" in inputFile:
-        step = 6
+    if "Cool" in inputFile:
+        step = 10
     else:
-        step = 5
+        if "50A" in inputFile:
+            step = 1
+        elif "40A" in inputFile:
+            step = 1
+        elif "30A" in inputFile:
+            step = 2
+        elif "20A" in inputFile:
+            step = 6
+        else:
+            step = 5
 
     os.chdir(outputFolder)  
 
@@ -71,7 +74,6 @@ def getFrames(inputFile):
 
     # used for iterations for getNum
     return (step, framesCaptured - 1)
-
 
 
 
@@ -265,7 +267,7 @@ def getNum(frameNumber, check):
                 digit = DIGITS_LOOKUP[tuple(on)]
                 digits.append(digit)
             except KeyError:
-                print("ERROR: Could not find digit in dictionary!")
+                # print("ERROR: Could not find digit in dictionary!")
                 continue
         # print(on)
 
@@ -282,7 +284,6 @@ def getNum(frameNumber, check):
     for x in range(len(digits)):
         num = num * 10 + digits[x]
     return num
-
 
 
 
@@ -305,7 +306,8 @@ def allNums(step, framesCaptured):
     return df, dir
 
 
-def folderToData(path, sheet, fileName, spaces):
+
+def folderToData(path, fileName, spaces):
     os.chdir(path)
     listOfFiles = os.listdir(path)
 
@@ -332,17 +334,48 @@ def folderToData(path, sheet, fileName, spaces):
         df,dir = allNums(frameInfo[0],frameInfo[1])
         df.to_excel(writer,startrow=2,startcol=x*spaces)
 
-        worksheet = writer.sheets['Sheet1']
-        worksheet.write_string(1, (x*spaces)+1, dir)
-
-
         print(dir)
         print(df)
         dfs.append(df)
 
+    dfs = sorted(dfs)
+
+    for df in dfs:
+        df.to_excel(writer,startrow=2,startcol=x*spaces)
+
+        worksheet = writer.sheets['Sheet1']
+        worksheet.write_string(1, (x*spaces)+1, dir)
+
 
     writer.save()
     
+
+
+folderToData('/Users/lukasgrunzke/Desktop/MCBData-Heating','Sheet1','TestingData.xlsx',4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ISSUE 1
@@ -353,12 +386,6 @@ def folderToData(path, sheet, fileName, spaces):
 
 # ISSUE 2
 # don't want to have it write a folder for an existing folder!
-
-
-
-
-folderToData('/Users/lukasgrunzke/Desktop/NEW VID','Sheet1','TestingData.xlsx',4)
-
 
 
 
