@@ -317,13 +317,13 @@ def getNum(frameNumber):
 
 
 
-def allNums(step, framesCaptured):
+def allNums(step, initialSecs, framesCaptured):
 
     # initialization
     temps = []
     times = []
 
-    for x in range(5):
+    for x in range(initialSecs):
         temps.append(getNum(x+1))
         times.append(x)
     for x in range(framesCaptured-5):
@@ -375,7 +375,7 @@ def folderToData(path, fileName, spaces, steps, initialSecs):
     for x, file in enumerate(listOfFiles):
         os.chdir(path)
         frameInfo = getFrames(file,steps,initialSecs)
-        df,dir = allNums(frameInfo[0],frameInfo[1])
+        df,dir = allNums(frameInfo[0],initialSecs,frameInfo[1])
         print(df)
 
         df.to_excel(writer,startrow=2,startcol=x*spaces)
