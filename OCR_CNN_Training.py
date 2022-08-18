@@ -118,9 +118,11 @@ def locateDisplay(image):
     return warped, output
 
 
-def locateDigits(warped):
-    # remove shadow
+def locateDigits(output, warped):
+
+    # filter to remove shadow effect
     # source: https://stackoverflow.com/questions/44752240/how-to-remove-shadow-from-scanned-images-using-opencv
+
     rgb_planes = cv2.split(warped)
 
     result_planes = []
@@ -133,15 +135,13 @@ def locateDigits(warped):
         result_planes.append(diff_img)
         result_norm_planes.append(norm_img)
 
+    # results (result is not normalized while warped is)
     result = cv2.merge(result_planes)
     warped = cv2.merge(result_norm_planes)
 
-    # cv2.imshow("shadow",warped)
-    # cv2.waitKey(0)
-
-    # define kernel for erosion
-    # erosion actually reduces the size of the white but since we use 
-    # BINARY_THRESH_INV (inversed) it does the same effect as cv2.dilate
+    # eroding and dilating image to remove noise
+    # since using cv2.THRESH_BINARY_INV (inversed), cv2.dilate has 
+    # effect of erosion and cv2.erode has effect of dilation
     kernel = np.ones((3,3),np.uint8)
     erosion = cv2.dilate(warped,kernel,iterations=1)
 
@@ -157,9 +157,6 @@ def locateDigits(warped):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
     thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
 
-    # cv2.imshow("thresh",thresh)
-    # cv2.waitKey(0)
-
     # CHAIN_APPROX_SIMPLE only stores the necessary points for the contours
     # i.e. if there is a rectangle, it will only store vertices instead of 
     # every dot on the line
@@ -167,7 +164,7 @@ def locateDigits(warped):
                        cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
-    # stores the contours of the DIGITS
+    # stores the contours of the digits
     digitCnts = []
 
     # find the boxes for each digit
@@ -183,9 +180,7 @@ def locateDigits(warped):
         # the correct w and h
         if w >= 18 and (h >= 50 and h <= 200):
             digitCnts.append(c)
-            # cv2.rectangle(output,(x,y),(x+w,y+h),(255,0,0),3)
-            # cv2.imshow("output boxes",output)
-            # cv2.waitKey(0)
+            cv2.rectangle(output,(x,y),(x+w,y+h),(255,0,0),3)
 
     # sort the contours from left to right (the same way we read numbers)
     if len(digitCnts) > 0:
@@ -193,7 +188,7 @@ def locateDigits(warped):
     else:
         print("ERROR: No contours found!")
 
-    return thresh, digitCnts
+    return output, thresh, digitCnts
 
 
 def identifyDigit(output, thresh, digitCnts):
@@ -299,7 +294,7 @@ def getNum(frameNumber):
     warped, output = locateDisplay(image)
 
     # locate roi for digits on display
-    thresh, digitCnts = locateDigits(warped)
+    output, thresh, digitCnts = locateDigits(output, warped)
 
     # list of individual digits in frame
     digits = identifyDigit(output, thresh, digitCnts)
