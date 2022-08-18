@@ -173,11 +173,11 @@ def locateDigits(output, warped):
         # w and h are the width and height of rectangle
         (x,y,w,h) = cv2.boundingRect(c)
 
-        # these need to be tuned for the specific image since
-        # the width and height will be different depending on the 
-        # camera angle and distance from LCD
-        # POSSIBLE IMPROVEMENT: write algorithm to automatically find
-        # the correct w and h
+
+        # the ranges for width and height needed to be satisfied for bounding box
+        # to be accepted as a contour for a digit
+        # these will have to be adjusted depending on camera angle and distance
+        # look at issue 1 1 on README.md
         if w >= 18 and (h >= 50 and h <= 200):
             digitCnts.append(c)
             cv2.rectangle(output,(x,y),(x+w,y+h),(255,0,0),3)
