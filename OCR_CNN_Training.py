@@ -401,6 +401,12 @@ def folderToData(path, fileName, spaces, steps, initialSecs):
     writer.save()
 
 
+# path is the location of the folder with the videos you want to be processed
+path = '/Users/lukasgrunzke/Desktop/NEWVID'
+
+# fileName is the name of the excel file that will be outputted in folder reference in path
+fileName = 'TestingData.xlsx'
+
 # This is the dictionary where you can input the tags in file names which refer to step time
 # For example: if file contains the string "40A", step will = 1. If it contains "20A", step = 6.
 # You can add/remove the strings as you like but they must be in the format:
@@ -415,72 +421,14 @@ steps = {
     "20A":6,
 }
 
+# spaces is the distance you want between each individual table in your excel spread sheet
+spaces = 1
+spaces = spaces + 3
+
 # initialSecs is how many seconds at START of video take screenshots
 # this is useful if you start video and then turn on power for example
 # if your step is normally 10 but you need lots of frames in the beginning to identify when power is 
 # turned on, initialSecs useful
 initialSecs = 5
 
-# path is the location of the folder with the videos you want to be processed
-path = '/Users/lukasgrunzke/Desktop/NEWVID'
-
-# fileName is the name of the excel file that will be outputted in folder reference in path
-fileName = 'TestingData.xlsx'
-
-folderToData(path,fileName,4,steps,initialSecs)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ISSUE 1
-# add some data checking
-# i.e. if num outputted is over 1000, only take the last three digits
-# when you input it into the excel file, make sure the cell with the modified 
-# data is flagged (maybe highlight orange)
-
-# ISSUE 2
-# don't want to have it write a folder for an existing folder!
-
-
-
-
-# testframe = getFrames('/Users/lukasgrunzke/Desktop/testvid5.mov')
-# step = testframe[0]
-# framesCaptured = testframe[1]
-# testdf = allNums(step,framesCaptured)
-
-# frames1 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-40A-1.mov')
-
-# step = frames1[0]
-# framesCaptured = frames1[1]
-# df1 = allNums(step,framesCaptured)
-
-# frames2 = getFrames('/Users/lukasgrunzke/Desktop/MCBData/25C-20A-2.mov')
-
-# step = frames2[0]
-# framesCaptured = frames2[1]
-# df2 = allNums(step,framesCaptured)
-
-
+folderToData(path,fileName,spaces,steps,initialSecs)
