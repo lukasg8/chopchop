@@ -208,6 +208,9 @@ def identifyDigit(output, thresh, digitCnts):
         (1, 1, 1, 1, 0, 1, 1): 9  
     }
 
+    # there is a specific dictionary for number one since the bounding box for 1
+    # is different (much smaller)
+    # therefore different sections used to identify 1
     ONE_LOOKUP = {
         (1,1): 1
     }
@@ -215,17 +218,20 @@ def identifyDigit(output, thresh, digitCnts):
     # list of digits
     digits = []
 
-    # iterate through each box (representing the space of each digit)
+    # iterate through each box (to identify each individual digit)
     for c in digitCnts:
+        # dimensions of bounding box for digit
+        # roi : region of interest
         (x,y,w,h) = cv2.boundingRect(c)
-        # roi: region of interest
         roi = thresh[y:y+h,x:x+w]
         
+        # values used to split bounding box into segments
         (roiH,roiW) = roi.shape
         (dH,dW) = (int(roiH*0.15),int(roiW*0.3))
         dHC = int(roiH * 0.1)
 
-        # splits the roi into 7 areas where the LCD can be on or not
+        # splits the roi into seven areas where the LCD can be ON or NOT
+        # for all numbers except 1
         segments = [
             ((0, 0), (w, int(dH*0.8))), # top
             ((0, 0), (int(dW*1.2), h // 2)), # top-left
@@ -237,47 +243,49 @@ def identifyDigit(output, thresh, digitCnts):
         ]
         on = [0] * len(segments)
 
+        # splits roi into two areas where LCD can be ON or NOT for 1 specifically
         one_segments = [
             ((int(w*0.4),int(h*0.1)), (int(w*0.7),int(h*0.5))), # top of 1
             ((0,int(h*0.5)),(int(w*0.6),h)) # bottom of 1
         ]
         one_on = [0] * len(one_segments)
 
-        # identifies if specific region of LCD is on or not by counting 
-        # the nonzero pixels. If they account for more than 50% of region,
-        # LCD region is on
+        # identifies if specific region of LCD is ON or NOT by counting 
+        # the nonzero pixels. If they account for more than 45% of region,
+        # LCD region is ON
+
+        # checking if segments for 1 are ON or Not
         for (i, ((xA, yA), (xB, yB))) in enumerate(one_segments):
             segROI = roi[yA:yB, xA:xB]
             total = cv2.countNonZero(segROI)
             area = (xB - xA) * (yB - yA)
-            # print("ONE: percentage covered for area ",i,": ",total/float(area))
             if total / float(area) > 0.45:
                 one_on[i]= 1
         
         try:
             digit = ONE_LOOKUP[tuple(one_on)]
             digits.append(digit)
+
+        # if not 1, check for other digits
         except KeyError:
             for (i, ((xA, yA), (xB, yB))) in enumerate(segments):
                 segROI = roi[yA:yB, xA:xB]
                 total = cv2.countNonZero(segROI)
                 area = (xB - xA) * (yB - yA)
-                # print("percentage covered for area ",i,": ",total/float(area))
                 if total / float(area) > 0.45:
                     on[i]= 1
             try:
                 digit = DIGITS_LOOKUP[tuple(on)]
                 digits.append(digit)
             except KeyError:
-                # print("ERROR: Could not find digit in dictionary!")
                 continue
-        # print(on)
 
         # output number found by computer next to bounding box of number on real image
         cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
         cv2.putText(output, str(digit), (x - 10, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
 
+    # return list of individual digits on LCD
     return digits
 
         
