@@ -191,7 +191,7 @@ def locateDigits(output, warped):
     return output, thresh, digitCnts
 
 
-def identifyDigit(output, thresh, digitCnts):
+def identifyDigits(output, thresh, digitCnts):
 
     # define dictionary
     # references to the sections of LCD which need to be on for a number
@@ -305,7 +305,7 @@ def getNum(frameNumber):
     output, thresh, digitCnts = locateDigits(output, warped)
 
     # list of individual digits in frame
-    digits = identifyDigit(output, thresh, digitCnts)
+    digits = identifyDigits(output, thresh, digitCnts)
 
     # forming whole number on display using list of digits
     num = 0
