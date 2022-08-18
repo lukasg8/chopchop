@@ -14,8 +14,7 @@ import os
 # Finding frames:
 # https://stackoverflow.com/questions/57791203/python-take-screenshot-from-video
 
-# getting frames from video
-# can choose step (how many seconds between frames)
+
 def getFrames(inputFile, steps, initialSecs):
     
     # initialization
@@ -45,7 +44,6 @@ def getFrames(inputFile, steps, initialSecs):
             print('step:', step)
             break
             
-
     os.chdir(outputFolder)  
 
     # iterating through frames of video and taking screenshots at every step
@@ -56,7 +54,7 @@ def getFrames(inputFile, steps, initialSecs):
             if framesCaptured > 1000:
                 print("ERROR: 1000 frames captured. Stopping for safety!")
                 return None
-            # first 5 seconds takes a screenshot every second (to tell when to start recording data)
+            # takes a screenshot every second for initialSecs (to tell when to start recording data)
             if framesCaptured <= initialSecs and currentFrame > fps:
                 currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
@@ -316,7 +314,6 @@ def getNum(frameNumber):
     return num
 
 
-
 def allNums(step, initialSecs, framesCaptured):
 
     # initialization
@@ -347,11 +344,13 @@ def allNums(step, initialSecs, framesCaptured):
     return df, dir
 
 
-
 def fileList(path):
+
+    # list of all files in folder
     os.chdir(path)
     listOfFiles = os.listdir(path)
 
+    # remove folders, excel files and .DS_Store files (cannot/don't want to read digits from them)
     remove = []
     for file in listOfFiles:
         if 'data' in file:
@@ -366,34 +365,40 @@ def fileList(path):
     for file in remove:
         listOfFiles.remove(file)
 
-    # alphabetical order
+    # sort list in alphabetical order
     # e.g. 25C-40A-1, 25C-40A-2, 25C-40A-3 are all next to each other
     listOfFiles = sorted(listOfFiles)
+
     return listOfFiles
 
 
-
 def folderToData(path, fileName, spaces, steps, initialSecs):
+
     # list of videos in alphabetical order
     listOfFiles = fileList(path)
 
     # creating excel file with fileName
     writer = pd.ExcelWriter(fileName,engine = 'xlsxwriter')
 
+    # iterate through all files in folder
     for x, file in enumerate(listOfFiles):
         os.chdir(path)
+
+        # get frames from file
         frameInfo = getFrames(file,steps,initialSecs)
+
+        # get dataframe and directory name from file
         df,dir = allNums(frameInfo[0],initialSecs,frameInfo[1])
         print(df)
 
+        # input dataframe into excel file
         df.to_excel(writer,startrow=2,startcol=x*spaces)
 
+        # title dataframe with directory name in excel file
         worksheet = writer.sheets['Sheet1']
         worksheet.write_string(1, (x*spaces)+1, dir)
 
     writer.save()
-    
-
 
 
 # This is the dictionary where you can input the tags in file names which refer to step time
