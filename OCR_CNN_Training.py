@@ -1,4 +1,5 @@
 from distutils import dir_util
+from multiprocessing.reduction import DupFd
 from imutils.perspective import four_point_transform
 from imutils import contours
 import imutils
@@ -110,37 +111,7 @@ def locateDisplay(image):
     return warped, output
 
 
-
-
-def getNum(frameNumber, check):
-
-    # get image
-    image = cv2.imread("frame"+str(frameNumber)+".jpg")
-
-    # define dictionary
-    # references to the sections of LCD which need to be on for a number
-    DIGITS_LOOKUP = {
-        (1, 1, 1, 0, 1, 1, 1): 0,
-        (0, 0, 1, 0, 0, 1, 0): 1,
-        (1, 0, 1, 1, 1, 0, 1): 2,
-        (1, 0, 1, 1, 0, 1, 1): 3,
-        (0, 1, 1, 1, 0, 1, 0): 4,
-        (1, 1, 0, 1, 0, 1, 1): 5,
-        (1, 1, 0, 1, 1, 1, 1): 6,
-        (1, 0, 1, 0, 0, 1, 0): 7,
-        (1, 1, 1, 1, 1, 1, 1): 8,
-        (1, 1, 1, 1, 0, 1, 1): 9  
-    }
-
-    ONE_LOOKUP = {
-        (1,1): 1
-    }
-
-    # process image
-    image = imutils.resize(image,height=500)
-
-    warped, output = locateDisplay(image)
-
+def locateDigits(warped):
     # remove shadow
     # source: https://stackoverflow.com/questions/44752240/how-to-remove-shadow-from-scanned-images-using-opencv
     rgb_planes = cv2.split(warped)
@@ -215,6 +186,30 @@ def getNum(frameNumber, check):
     else:
         print("ERROR: No contours found!")
 
+    return thresh, digitCnts
+
+
+def identifyDigit(output, thresh, digitCnts):
+
+    # define dictionary
+    # references to the sections of LCD which need to be on for a number
+    DIGITS_LOOKUP = {
+        (1, 1, 1, 0, 1, 1, 1): 0,
+        (0, 0, 1, 0, 0, 1, 0): 1,
+        (1, 0, 1, 1, 1, 0, 1): 2,
+        (1, 0, 1, 1, 0, 1, 1): 3,
+        (0, 1, 1, 1, 0, 1, 0): 4,
+        (1, 1, 0, 1, 0, 1, 1): 5,
+        (1, 1, 0, 1, 1, 1, 1): 6,
+        (1, 0, 1, 0, 0, 1, 0): 7,
+        (1, 1, 1, 1, 1, 1, 1): 8,
+        (1, 1, 1, 1, 0, 1, 1): 9  
+    }
+
+    ONE_LOOKUP = {
+        (1,1): 1
+    }
+
     # list of digits
     digits = []
 
@@ -276,18 +271,39 @@ def getNum(frameNumber, check):
                 continue
         # print(on)
 
-        # output number on screen
+        # output number found by computer next to bounding box of number on real image
         cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
         cv2.putText(output, str(digit), (x - 10, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
-        
-        if check == True:
-            cv2.imshow("output again",output)
-            cv2.waitKey(0)
 
+    return digits
+
+        
+
+
+def getNum(frameNumber):
+
+    # get image
+    image = cv2.imread("frame"+str(frameNumber)+".jpg")
+
+    # process image
+    image = imutils.resize(image,height=500)
+
+    # locate roi for display
+    warped, output = locateDisplay(image)
+
+    # locate roi for digits on display
+    thresh, digitCnts = locateDigits(warped)
+
+    # list of individual digits in frame
+    digits = identifyDigit(output, thresh, digitCnts)
+
+    # forming whole number on display using list of digits
     num = 0
     for x in range(len(digits)):
         num = num * 10 + digits[x]
+    
+    # output number found
     return num
 
 
@@ -296,10 +312,10 @@ def allNums(step, framesCaptured):
     temps = []
     times = []
     for x in range(5):
-        temps.append(getNum(x+1,False))
+        temps.append(getNum(x+1))
         times.append(x)
     for x in range(framesCaptured-5):
-        temps.append(getNum(x+6,False))
+        temps.append(getNum(x+6))
         times.append((x*step)+5)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
@@ -348,6 +364,7 @@ def folderToData(path, fileName, spaces, steps):
         os.chdir(path)
         frameInfo = getFrames(file,steps)
         df,dir = allNums(frameInfo[0],frameInfo[1])
+        print(df)
 
         df.to_excel(writer,startrow=2,startcol=x*spaces)
 
