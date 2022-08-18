@@ -16,7 +16,7 @@ import os
 
 # getting frames from video
 # can choose step (how many seconds between frames)
-def getFrames(inputFile):
+def getFrames(inputFile, steps):
     currentFrame = 0
     framesCaptured = 1
     
@@ -32,19 +32,12 @@ def getFrames(inputFile):
     cam = cv2.VideoCapture(inputFile)
     fps = cam.get(cv2.CAP_PROP_FPS)
 
-    if "Cool" in inputFile:
-        step = 10
-    else:
-        if "50A" in inputFile:
-            step = 1
-        elif "40A" in inputFile:
-            step = 1
-        elif "30A" in inputFile:
-            step = 2
-        elif "20A" in inputFile:
-            step = 6
-        else:
-            step = 5
+    for key in steps.keys():
+        if key in inputFile:
+            step = steps[key]
+            print('key:', key)
+            print('step:', step)
+            break
 
     os.chdir(outputFolder)  
 
@@ -307,7 +300,7 @@ def allNums(step, framesCaptured):
 
 
 
-def folderToData(path, fileName, spaces):
+def folderToData(path, fileName, spaces, steps):
     os.chdir(path)
     listOfFiles = os.listdir(path)
 
@@ -330,7 +323,7 @@ def folderToData(path, fileName, spaces):
 
     for x, file in enumerate(listOfFiles):
         os.chdir(path)
-        frameInfo = getFrames(file)
+        frameInfo = getFrames(file,steps)
         df,dir = allNums(frameInfo[0],frameInfo[1])
         df.to_excel(writer,startrow=2,startcol=x*spaces)
 
@@ -351,7 +344,25 @@ def folderToData(path, fileName, spaces):
     
 
 
-folderToData('/Users/lukasgrunzke/Desktop/MCBData-Heating','Sheet1','TestingData.xlsx',4)
+# This is the dictionary where you can input the tags in file names which refer to step time
+# For example: if file contains the string "40A", step will = 1. If it contains "20A", step = 6.
+# You can add/remove the strings as you like but they must be in the format:
+# steps = {
+#   "exampleString1" : exampleStepTime1,
+#   "exampleString2" : exampleStepTime2,
+#   "exampleString3" : exampleStepTime3 <-- last entry does not have a comma! (,)
+# }
+# ALWAYS keep "else". This is the step time if none of the file tags are found in file name
+steps = {
+    "40A":1,
+    "30A":1,
+    "20A":6,
+    "else":10
+}
+
+
+
+folderToData('/Users/lukasgrunzke/Desktop/NEWVID','TestingData.xlsx',4, steps)
 
 
 
