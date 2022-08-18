@@ -16,7 +16,7 @@ import os
 
 # getting frames from video
 # can choose step (how many seconds between frames)
-def getFrames(inputFile, steps):
+def getFrames(inputFile, steps, initialSecs):
     
     # initialization
     currentFrame = 0
@@ -44,6 +44,7 @@ def getFrames(inputFile, steps):
             print('key:', key)
             print('step:', step)
             break
+            
 
     os.chdir(outputFolder)  
 
@@ -56,7 +57,7 @@ def getFrames(inputFile, steps):
                 print("ERROR: 1000 frames captured. Stopping for safety!")
                 return None
             # first 5 seconds takes a screenshot every second (to tell when to start recording data)
-            if framesCaptured <= 5 and currentFrame > fps:
+            if framesCaptured <= initialSecs and currentFrame > fps:
                 currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
                 print('Creating: ' + name)
@@ -288,7 +289,6 @@ def identifyDigits(output, thresh, digitCnts):
     # return list of individual digits on LCD
     return digits
 
-        
 
 def getNum(frameNumber):
 
@@ -318,8 +318,11 @@ def getNum(frameNumber):
 
 
 def allNums(step, framesCaptured):
+
+    # initialization
     temps = []
     times = []
+
     for x in range(5):
         temps.append(getNum(x+1))
         times.append(x)
@@ -362,7 +365,7 @@ def fileList(path):
 
 
 
-def folderToData(path, fileName, spaces, steps):
+def folderToData(path, fileName, spaces, steps, initialSecs):
     # list of videos in alphabetical order
     listOfFiles = fileList(path)
 
@@ -371,7 +374,7 @@ def folderToData(path, fileName, spaces, steps):
 
     for x, file in enumerate(listOfFiles):
         os.chdir(path)
-        frameInfo = getFrames(file,steps)
+        frameInfo = getFrames(file,steps,initialSecs)
         df,dir = allNums(frameInfo[0],frameInfo[1])
         print(df)
 
@@ -393,17 +396,19 @@ def folderToData(path, fileName, spaces, steps):
 #   "exampleString2" : exampleStepTime2,
 #   "exampleString3" : exampleStepTime3 <-- last entry does not have a comma! (,)
 # }
-# ALWAYS keep "else". This is the step time if none of the file tags are found in file name
 steps = {
     "40A":1,
     "30A":1,
     "20A":6,
-    "else":10
 }
 
+# initialSecs is how many seconds at START of video take screenshots
+# this is useful if you start video and then turn on power for example
+# if your step is normally 10 but you need lots of frames in the beginning to identify when power is 
+# turned on, initialSecs useful
+initialSecs = 5
 
-
-folderToData('/Users/lukasgrunzke/Desktop/NEWVID','TestingData.xlsx',4, steps)
+folderToData('/Users/lukasgrunzke/Desktop/NEWVID','TestingData.xlsx',4,steps,initialSecs)
 
 
 
