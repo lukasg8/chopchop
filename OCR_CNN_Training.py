@@ -302,8 +302,7 @@ def allNums(step, framesCaptured):
     return df, dir
 
 
-
-def folderToData(path, fileName, spaces, steps):
+def fileList(path):
     os.chdir(path)
     listOfFiles = os.listdir(path)
 
@@ -321,30 +320,31 @@ def folderToData(path, fileName, spaces, steps):
     for file in remove:
         listOfFiles.remove(file)
 
-    dfs = []
+    # alphabetical order
+    # e.g. 25C-40A-1, 25C-40A-2, 25C-40A-3 are all next to each other
+    listOfFiles = sorted(listOfFiles)
+    return listOfFiles
+
+def folderToData(path, fileName, spaces, steps):
+    # list of videos in alphabetical order
+    listOfFiles = fileList(path)
+
+    # creating excel file with fileName
     writer = pd.ExcelWriter(fileName,engine = 'xlsxwriter')
 
     for x, file in enumerate(listOfFiles):
         os.chdir(path)
         frameInfo = getFrames(file,steps)
         df,dir = allNums(frameInfo[0],frameInfo[1])
-        df.to_excel(writer,startrow=2,startcol=x*spaces)
 
-        print(dir)
-        print(df)
-        dfs.append(df)
-
-    dfs = sorted(dfs)
-
-    for df in dfs:
         df.to_excel(writer,startrow=2,startcol=x*spaces)
 
         worksheet = writer.sheets['Sheet1']
         worksheet.write_string(1, (x*spaces)+1, dir)
 
-
     writer.save()
     
+
 
 
 # This is the dictionary where you can input the tags in file names which refer to step time
