@@ -1,8 +1,10 @@
 # chopchop
 
 Guide to use:
-
-
+1. At the bottom of OCRtoExcel.py, you will find 5 variables.
+2. Input the variables which suit your application.
+- Each variable has a description for you to understand what it does
+3. Run the program
 
 
 Potential Improvements:
