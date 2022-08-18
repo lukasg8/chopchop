@@ -72,33 +72,7 @@ def getFrames(inputFile, steps):
     return (step, framesCaptured - 1)
 
 
-
-def getNum(frameNumber, check):
-
-    # get image
-    image = cv2.imread("frame"+str(frameNumber)+".jpg")
-
-    # define dictionary
-    # references to the sections of LCD which need to be on for a number
-    DIGITS_LOOKUP = {
-        (1, 1, 1, 0, 1, 1, 1): 0,
-        (0, 0, 1, 0, 0, 1, 0): 1,
-        (1, 0, 1, 1, 1, 0, 1): 2,
-        (1, 0, 1, 1, 0, 1, 1): 3,
-        (0, 1, 1, 1, 0, 1, 0): 4,
-        (1, 1, 0, 1, 0, 1, 1): 5,
-        (1, 1, 0, 1, 1, 1, 1): 6,
-        (1, 0, 1, 0, 0, 1, 0): 7,
-        (1, 1, 1, 1, 1, 1, 1): 8,
-        (1, 1, 1, 1, 0, 1, 1): 9  
-    }
-
-    ONE_LOOKUP = {
-        (1,1): 1
-    }
-
-    # process image
-    image = imutils.resize(image,height=500)
+def locateDisplay(image):
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (7,7), 0)
@@ -128,9 +102,44 @@ def getNum(frameNumber, check):
             break
 
     # if you give it four points, it will output rectangle as if you are looking at it straigth on
+    # warped is the filtered image to use to find digits
+    # output is to use to check what function has identified as the display
     warped = four_point_transform(gray, displayCnt.reshape(4,2))
     output = four_point_transform(image, displayCnt.reshape(4,2))
 
+    return warped, output
+
+
+
+
+def getNum(frameNumber, check):
+
+    # get image
+    image = cv2.imread("frame"+str(frameNumber)+".jpg")
+
+    # define dictionary
+    # references to the sections of LCD which need to be on for a number
+    DIGITS_LOOKUP = {
+        (1, 1, 1, 0, 1, 1, 1): 0,
+        (0, 0, 1, 0, 0, 1, 0): 1,
+        (1, 0, 1, 1, 1, 0, 1): 2,
+        (1, 0, 1, 1, 0, 1, 1): 3,
+        (0, 1, 1, 1, 0, 1, 0): 4,
+        (1, 1, 0, 1, 0, 1, 1): 5,
+        (1, 1, 0, 1, 1, 1, 1): 6,
+        (1, 0, 1, 0, 0, 1, 0): 7,
+        (1, 1, 1, 1, 1, 1, 1): 8,
+        (1, 1, 1, 1, 0, 1, 1): 9  
+    }
+
+    ONE_LOOKUP = {
+        (1,1): 1
+    }
+
+    # process image
+    image = imutils.resize(image,height=500)
+
+    warped, output = locateDisplay(image)
 
     # remove shadow
     # source: https://stackoverflow.com/questions/44752240/how-to-remove-shadow-from-scanned-images-using-opencv
@@ -302,6 +311,7 @@ def allNums(step, framesCaptured):
     return df, dir
 
 
+
 def fileList(path):
     os.chdir(path)
     listOfFiles = os.listdir(path)
@@ -324,6 +334,8 @@ def fileList(path):
     # e.g. 25C-40A-1, 25C-40A-2, 25C-40A-3 are all next to each other
     listOfFiles = sorted(listOfFiles)
     return listOfFiles
+
+
 
 def folderToData(path, fileName, spaces, steps):
     # list of videos in alphabetical order
