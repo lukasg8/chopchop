@@ -303,19 +303,6 @@ def allNums(step, framesCaptured):
 
     # output df and title (for excel sheet)
     return df, dir
-    
-
-
-def multipleDfs(dfList, outputFolder, sheet, file_name, spaces):
-    os.chdir(outputFolder)
-    writer = pd.ExcelWriter(file_name,engine = 'xlsxwriter')
-    sheet = writer.sheet(sheet)
-    col = 0
-    for dataframe in dfList:
-        dataframe.to_excel(writer,sheet_name=sheet,startrow=3,startcol=col)
-        sheet.write(col,1,)
-        col = col + 5
-    writer.save()
 
 
 def folderToData(path, sheet, fileName, spaces):
@@ -355,9 +342,6 @@ def folderToData(path, sheet, fileName, spaces):
 
 
     writer.save()
-
-
-        # insertHeading(sht.range())
     
 
 
@@ -395,9 +379,5 @@ folderToData('/Users/lukasgrunzke/Desktop/NEW VID','Sheet1','TestingData.xlsx',4
 # step = frames2[0]
 # framesCaptured = frames2[1]
 # df2 = allNums(step,framesCaptured)
-
-# outputFolder = '/Users/lukasgrunzke/Desktop/MCBData'
-# dfList = [df1,df2]
-# multipleDfs(dfList,outputFolder,'Testing','test1.xlsx',5)
 
 
