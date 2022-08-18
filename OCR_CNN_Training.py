@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
-# import xlwings as xw
 
 # sources:
 # OCR:
@@ -18,11 +17,15 @@ import os
 # getting frames from video
 # can choose step (how many seconds between frames)
 def getFrames(inputFile, steps):
+    
+    # initialization
     currentFrame = 0
     framesCaptured = 1
     
+    # adding suffix to file to create folder for screenshots
     outputFolder = os.path.splitext(inputFile)[0] + "-data"
 
+    # creating/finding folder
     try:
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
@@ -30,9 +33,11 @@ def getFrames(inputFile, steps):
     except OSError:
         print("ERROR: Could not create directory!")
         
+    # reading video file
     cam = cv2.VideoCapture(inputFile)
     fps = cam.get(cv2.CAP_PROP_FPS)
 
+    # setting step based on dictionary inputted
     for key in steps.keys():
         if key in inputFile:
             step = steps[key]
@@ -42,12 +47,15 @@ def getFrames(inputFile, steps):
 
     os.chdir(outputFolder)  
 
+    # iterating through frames of video and taking screenshots at every step
     while(True):
         ret,frame = cam.read()
         if ret:
+            # safety feature: to prevent taking too many screenshots
             if framesCaptured > 1000:
                 print("ERROR: 1000 frames captured. Stopping for safety!")
                 return None
+            # first 5 seconds takes a screenshot every second (to tell when to start recording data)
             if framesCaptured <= 5 and currentFrame > fps:
                 currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
@@ -56,6 +64,7 @@ def getFrames(inputFile, steps):
                 if not(cv2.imwrite(name,frame)):
                     print('ERROR: Could not write image file')
                 framesCaptured += 1
+            # after initial 5 seconds, begins taking screenshots every step seconds
             elif currentFrame > (step*fps):
                 currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
@@ -69,7 +78,8 @@ def getFrames(inputFile, steps):
             break
     cam.release()
 
-    # used for iterations for getNum
+    # outputs step for allNums to know how to index dataframe
+    # outputs framesCaptured for allNums to know how many entries into dataframe
     return (step, framesCaptured - 1)
 
 
@@ -279,7 +289,6 @@ def identifyDigit(output, thresh, digitCnts):
     return digits
 
         
-
 
 def getNum(frameNumber):
 
