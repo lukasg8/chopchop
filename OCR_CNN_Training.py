@@ -323,16 +323,24 @@ def allNums(step, initialSecs, framesCaptured):
     temps = []
     times = []
 
+    # adds num and time to lists for initial screenshots at START
     for x in range(initialSecs):
         temps.append(getNum(x+1))
         times.append(x)
+
+    # adds num and time to lists after initial screenshots
     for x in range(framesCaptured-5):
         temps.append(getNum(x+6))
         times.append((x*step)+5)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
+
+    # finds current directory to title table in Excel file
     path = os.getcwd()
     dir = os.path.basename(path)
+
+    # removes last 5 chars because suffix of directory is '-data'
+    # if you change the suffix in getFrames(), need to change this here too
     dir = dir[:-5]
 
     # output df and title (for excel sheet)
