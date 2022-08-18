@@ -85,26 +85,24 @@ def getFrames(inputFile, steps):
 
 def locateDisplay(image):
 
+    # filters to make contours/edges more visible
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (7,7), 0)
     edged = cv2.adaptiveThreshold(blurred, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 2)
-
-    # cv2.imshow("edged",edged)
-    # cv2.waitKey(0)
 
     # find contours (locates continous points with same color/intensity)
     cnts = cv2.findContours(edged.copy(),cv2.RETR_EXTERNAL,
                        cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
     
-    # sort by largest area
+    # sort contours by largest area
     cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
 
-    # contours for display
+    # contours of display
     displayCnt = None
 
-    # finding rectangle (approx shape and find one with 4  vertices)
+    # finding rectangle by approximating contour shape and finding one with 4 vertices
     for c in cnts:
         peri = cv2.arcLength(c,True)
         approx = cv2.approxPolyDP(c,0.05*peri,True)
@@ -112,7 +110,6 @@ def locateDisplay(image):
             displayCnt = approx
             break
 
-    # if you give it four points, it will output rectangle as if you are looking at it straigth on
     # warped is the filtered image to use to find digits
     # output is to use to check what function has identified as the display
     warped = four_point_transform(gray, displayCnt.reshape(4,2))
