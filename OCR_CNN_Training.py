@@ -44,6 +44,9 @@ def getFrames(inputFile, steps):
     while(True):
         ret,frame = cam.read()
         if ret:
+            if framesCaptured > 1000:
+                print("ERROR: 1000 frames captured. Stopping for safety!")
+                return None
             if framesCaptured <= 5 and currentFrame > fps:
                 currentFrame = 0
                 name = 'frame'+str(framesCaptured)+'.jpg'
