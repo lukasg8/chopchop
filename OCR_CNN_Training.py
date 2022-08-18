@@ -421,7 +421,13 @@ steps = {
 # turned on, initialSecs useful
 initialSecs = 5
 
-folderToData('/Users/lukasgrunzke/Desktop/NEWVID','TestingData.xlsx',4,steps,initialSecs)
+# path is the location of the folder with the videos you want to be processed
+path = '/Users/lukasgrunzke/Desktop/NEWVID'
+
+# fileName is the name of the excel file that will be outputted in folder reference in path
+fileName = 'TestingData.xlsx'
+
+folderToData(path,fileName,4,steps,initialSecs)
 
 
 
