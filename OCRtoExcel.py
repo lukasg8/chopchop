@@ -90,6 +90,9 @@ def locateDisplay(image):
     edged = cv2.adaptiveThreshold(blurred, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 2)
 
+    cv2.imshow("edged",edged)
+    cv2.waitKey(0)
+
     # find contours (locates continous points with same color/intensity)
     cnts = cv2.findContours(edged.copy(),cv2.RETR_EXTERNAL,
                        cv2.CHAIN_APPROX_SIMPLE)
@@ -113,11 +116,66 @@ def locateDisplay(image):
     # output is to use to check what function has identified as the display
     warped = four_point_transform(gray, displayCnt.reshape(4,2))
     output = four_point_transform(image, displayCnt.reshape(4,2))
+    edged = output = four_point_transform(edged, displayCnt.reshape(4,2))
 
-    return warped, output
+    return warped, output, edged
+
+def locateDigitstwo(output,warped,edged):
+
+    kernel = np.ones((5,5),np.uint8)
+    edged = cv2.erode(edged,kernel,iterations=1)
+
+    nlabels, labels, stats, centroids = cv2.connectedComponentsWithStats(edged, None, None, None, 8, cv2.CV_32S)
+
+    #get CC_STAT_AREA component as stats[label, COLUMN] 
+    areas = stats[1:,cv2.CC_STAT_AREA]
+
+    result = np.zeros((labels.shape), np.uint8)
+
+    for i in range(0, nlabels - 1):
+        if areas[i] >= 100:   #keep
+            result[labels == i + 1] = 255
+
+    kernel = np.ones((9,9),np.uint8)
+    result = cv2.dilate(result,kernel,iterations=1)
+
+    cv2.imshow("Binary", edged)
+    cv2.imshow("Result", result)
+    cv2.waitKey(0)
+
+    cnts = cv2.findContours(result,cv2.RETR_EXTERNAL,
+                       cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    # stores the contours of the digits
+    digitCnts = []
+
+    # find the boxes for each digit
+    for c in cnts:
+        # x and y are the top left coordinates of the rectangle
+        # w and h are the width and height of rectangle
+        (x,y,w,h) = cv2.boundingRect(c)
 
 
-def locateDigits(output, warped):
+        # the ranges for width and height needed to be satisfied for bounding box
+        # to be accepted as a contour for a digit
+        # these will have to be adjusted depending on camera angle and distance
+        # look at issue 1 1 on README.md
+        if w >= 18 and (h >= 50 and h <= 200):
+            digitCnts.append(c)
+            cv2.rectangle(output,(x,y),(x+w,y+h),(255,0,0),3)
+
+    # sort the contours from left to right (the same way we read numbers)
+    if len(digitCnts) > 0:
+        digitCnts = contours.sort_contours(digitCnts, method='left-to-right')[0]
+    else:
+        print("ERROR: No contours found!")
+
+    return output, result, digitCnts
+
+
+
+def locateDigits(output, warped, edged):
 
     # filter to remove shadow effect
     # source: https://stackoverflow.com/questions/44752240/how-to-remove-shadow-from-scanned-images-using-opencv
@@ -153,8 +211,13 @@ def locateDigits(output, warped):
     thresh = cv2.threshold(dilation,0,225,
                      cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
-    thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
+    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
+    kernel = np.ones((7,7),np.uint8)
+    # thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
+    thresh = cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
+
+    cv2.imshow("thresh",thresh)
+    cv2.waitKey(0)
 
     # CHAIN_APPROX_SIMPLE only stores the necessary points for the contours
     # i.e. if there is a rectangle, it will only store vertices instead of 
@@ -297,10 +360,10 @@ def getNum(frameNumber):
     image = imutils.resize(image,height=500)
 
     # locate roi for display
-    warped, output = locateDisplay(image)
+    warped, output, edged = locateDisplay(image)
 
     # locate roi for digits on display
-    output, thresh, digitCnts = locateDigits(output, warped)
+    output, thresh, digitCnts = locateDigits(output, warped, edged)
 
     # list of individual digits in frame
     digits = identifyDigits(output, thresh, digitCnts)
@@ -322,6 +385,7 @@ def allNums(step, initialSecs, framesCaptured):
 
     # adds num and time to lists for initial screenshots at START
     previous = 9999999999
+    startTime = 0
     for x in range(initialSecs):
         num = getNum(x+1)
         if num > previous:
@@ -332,6 +396,7 @@ def allNums(step, initialSecs, framesCaptured):
                 temps.append(getNum(y+startTime+1))
             break
         previous = num
+    diff = initialSecs - startTime
 
     # adds num and time to lists after initial screenshots
     for x in range(framesCaptured-initialSecs):
@@ -413,6 +478,7 @@ def folderToData(path, fileName, spaces, steps, initialSecs):
 path = '/Users/lukasgrunzke/Desktop/MCBData-Heating'
 path = '/Users/lukasgrunzke/Desktop/NEWVID'
 
+
 # fileName is the name of the excel file that will be outputted in folder reference in path
 fileName = 'TestingData.xlsx'
 
@@ -426,7 +492,7 @@ fileName = 'TestingData.xlsx'
 # }
 steps = {
     "40A":1,
-    "30A":2,
+    "30A":1,
     "20A":6,
     "10A":10,
 }
