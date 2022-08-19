@@ -321,14 +321,22 @@ def allNums(step, initialSecs, framesCaptured):
     times = []
 
     # adds num and time to lists for initial screenshots at START
+    previous = 9999999999
     for x in range(initialSecs):
-        temps.append(getNum(x+1))
-        times.append(x)
+        num = getNum(x+1)
+        if num > previous:
+            startTime = x-1
+            diff = initialSecs - startTime
+            for y in range(diff):
+                times.append(y)
+                temps.append(getNum(y+startTime+1))
+            break
+        previous = num
 
     # adds num and time to lists after initial screenshots
-    for x in range(framesCaptured-5):
-        temps.append(getNum(x+6))
-        times.append((x*step)+5)
+    for x in range(framesCaptured-initialSecs):
+        temps.append(getNum(x+1+diff))
+        times.append((x*step)+diff)
     df = pd.DataFrame({'time':times,
                        'temps':temps})
 
@@ -402,6 +410,7 @@ def folderToData(path, fileName, spaces, steps, initialSecs):
 
 
 # path is the location of the folder with the videos you want to be processed
+path = '/Users/lukasgrunzke/Desktop/MCBData-Heating'
 path = '/Users/lukasgrunzke/Desktop/NEWVID'
 
 # fileName is the name of the excel file that will be outputted in folder reference in path
@@ -417,8 +426,9 @@ fileName = 'TestingData.xlsx'
 # }
 steps = {
     "40A":1,
-    "30A":1,
+    "30A":2,
     "20A":6,
+    "10A":10,
 }
 
 # spaces is the distance you want between each individual table in your excel spread sheet
